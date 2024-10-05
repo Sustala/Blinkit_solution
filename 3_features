@@ -1,4 +1,4 @@
---Feature 1
+--Feature 1: Preference Shift in Time of Order 
 with order_times as (
     select customerid,
            case 
@@ -26,5 +26,21 @@ from order_times_cal
 group by customerid,time_of_day
 order by customerid;
 
---Feature 2
+--Feature 2: Store-to-Customer Proximity Impact
+select o.customerid, avg(cast(d.distancecovered as int)) as avg_delivery_distance, count(o.orderid) as total_orders
+from blinkit_order o
+join blinkit_delivery d on o.orderid = d.orderid
+where datediff(day, o.orderdate, getdate()) >= 180 
+group by o.customerid
+having avg(cast(d.distancecovered as int)) > 5;  -- example threshold for "long distance"
+
+--Feature 3: Category Saturation Index
+select o.customerid, p.category, count(p.productid) as category_order_count,
+       count(distinct p.category) as unique_categories_ordered,
+       (count(p.productid) / count(distinct p.category)) as category_saturation_index
+from blinkit_order o
+join blinkit_orderdetails od on o.orderid = od.orderid
+join blinkit_products p on od.productid = p.productid
+where datediff(day, o.orderdate, getdate()) >= 180 
+group by o.customerid, p.category
 
