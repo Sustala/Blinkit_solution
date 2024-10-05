@@ -1,1 +1,30 @@
+--Feature 1
+with order_times as (
+    select customerid,
+           case 
+               when datepart(hour, orderdate) between 6 and 12 then 'morning'
+               when datepart(hour, orderdate) between 12 and 18 then 'afternoon'
+               when datepart(hour, orderdate) between 18 and 24 then 'evening'
+               else 'night'
+           end as time_of_day,
+		   orderid
+           
+    from blinkit_order
+    where datediff(day, orderdate, getdate()) > 180
+   
+)
+,order_times_cal as (
+select customerid,
+	   time_of_day,
+	   count(orderid) as order_count
+from order_times
+group by customerid, time_of_day
+)
+
+select customerid, time_of_day, max(order_count)  as preferred_time_of_day
+from order_times_cal
+group by customerid,time_of_day
+order by customerid;
+
+--Feature 2
 
